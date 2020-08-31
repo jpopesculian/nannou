@@ -27,10 +27,10 @@ pub struct BufferImage {
 ///
 /// An `ImageReadMapping` may only be created by reading from a `BufferImage` returned by a
 /// `Texture::to_image` call.
-pub struct ImageReadMapping {
+pub struct ImageReadMapping<'a> {
     color_type: image::ColorType,
     size: [u32; 2],
-    mapping: wgpu::BufferReadMapping,
+    mapping: wgpu::BufferView<'a>,
 }
 
 impl wgpu::TextureBuilder {
@@ -319,7 +319,7 @@ impl BufferImage {
     ///
     /// Note: The given callback will not be called until the memory is mapped and the device is
     /// polled. You should not rely on the callback being called immediately.
-    pub async fn read(&self) -> Result<ImageReadMapping, wgpu::BufferAsyncError> {
+    pub async fn read<'a>(&'a self) -> Result<ImageReadMapping<'a>, wgpu::BufferAsyncError> {
         let size = self.size;
         let color_type = self.color_type;
         let mapping = self.buffer.read().await?;
@@ -331,7 +331,7 @@ impl BufferImage {
     }
 }
 
-impl ImageReadMapping {
+impl<'a> ImageReadMapping<'a> {
     /// Produce the color type of an image, compatible with the `image` crate.
     pub fn color_type(&self) -> image::ColorType {
         self.color_type
@@ -343,7 +343,7 @@ impl ImageReadMapping {
     }
 
     /// The raw image data as a slice of bytes.
-    pub fn mapping(&self) -> &wgpu::BufferReadMapping {
+    pub fn mapping(&self) -> &wgpu::BufferView {
         &self.mapping
     }
 
