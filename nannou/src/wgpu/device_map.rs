@@ -108,7 +108,10 @@ impl AdapterMap {
         if let Some(adapter) = map.get(&key) {
             return Some(adapter.clone());
         }
-        if let Some(adapter) = wgpu::Adapter::request(&options, backends).await {
+        if let Some(adapter) = wgpu::Instance::new(backends)
+            .request_adapter(&options)
+            .await
+        {
             let device_map = Default::default();
             let adapter = Arc::new(ActiveAdapter {
                 adapter,
@@ -125,7 +128,9 @@ impl AdapterMap {
         options: wgpu::RequestAdapterOptions<'b>,
         backends: wgpu::BackendBit,
     ) -> Option<Arc<ActiveAdapter>> {
-        let adapter = wgpu::Adapter::request(&options, backends).await?;
+        let adapter = wgpu::Instance::new(backends)
+            .request_adapter(&options)
+            .await?;
         let device_map = Default::default();
         let adapter = Arc::new(ActiveAdapter {
             adapter,
@@ -198,7 +203,7 @@ impl ActiveAdapter {
     pub async fn get_or_request_device_async(
         &self,
         descriptor: wgpu::DeviceDescriptor,
-    ) -> Arc<DeviceQueuePair> {
+    ) -> Result<Arc<DeviceQueuePair>, wgpu::RequestDeviceError> {
         let key = DeviceMapKey { descriptor };
         let mut map = self
             .device_map
@@ -207,13 +212,13 @@ impl ActiveAdapter {
             .expect("failed to acquire `AdapterMap` lock");
         if let Some(device_ref) = map.get(&key) {
             if let Some(device) = device_ref.upgrade() {
-                return device;
+                return Ok(device);
             }
         }
-        let (device, queue) = self.adapter.request_device(&key.descriptor).await;
+        let (device, queue) = self.adapter.request_device(&key.descriptor, None).await?;
         let device = Arc::new(DeviceQueuePair { device, queue });
         map.insert(key, Arc::downgrade(&device));
-        device
+        Ok(device)
     }
 
     /// Request a device with the given descriptor.
@@ -224,8 +229,8 @@ impl ActiveAdapter {
     pub async fn request_device_async(
         &self,
         descriptor: wgpu::DeviceDescriptor,
-    ) -> Arc<DeviceQueuePair> {
-        let (device, queue) = self.adapter.request_device(&descriptor).await;
+    ) -> Result<Arc<DeviceQueuePair>, wgpu::RequestDeviceError> {
+        let (device, queue) = self.adapter.request_device(&descriptor, None).await?;
         let device = Arc::new(DeviceQueuePair { device, queue });
         let key = DeviceMapKey { descriptor };
         let mut map = self
@@ -234,7 +239,7 @@ impl ActiveAdapter {
             .lock()
             .expect("failed to acquire `DeviceMap` lock");
         map.insert(key, Arc::downgrade(&device));
-        device
+        Ok(device)
     }
 
     /// A count of devices that are currently active.

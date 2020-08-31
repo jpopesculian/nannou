@@ -395,7 +395,8 @@ impl Renderer {
             .usage(wgpu::TextureUsage::SAMPLED | wgpu::TextureUsage::COPY_DST)
             .format(Self::GLYPH_CACHE_TEXTURE_FORMAT)
             .build(device);
-        let glyph_cache_texture_view = glyph_cache_texture.create_default_view();
+        let glyph_cache_texture_view =
+            glyph_cache_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
         // Create the depth texture.
         let depth_texture =
@@ -800,23 +801,26 @@ impl Renderer {
 
         // Retrieve the clear values based on the bg color.
         let bg_color = draw.state.borrow().background_color;
-        let (load_op, clear_color) = match bg_color {
-            None => (wgpu::LoadOp::Load, wgpu::Color::TRANSPARENT),
+        let ops = match bg_color {
+            None => wgpu::Operations {
+                load: wgpu::LoadOp::Load,
+                store: false,
+            },
             Some(color) => {
                 let (r, g, b, a) = color.into();
                 let (r, g, b, a) = (r as f64, g as f64, b as f64, a as f64);
                 let clear_color = wgpu::Color { r, g, b, a };
-                (wgpu::LoadOp::Clear, clear_color)
+                wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(clear_color),
+                    store: false,
+                }
             }
         };
 
         // Create render pass builder.
         let render_pass_builder = wgpu::RenderPassBuilder::new()
             .color_attachment(output_attachment, |color| {
-                color
-                    .resolve_target(resolve_target)
-                    .load_op(load_op)
-                    .clear_color(clear_color)
+                color.resolve_target(resolve_target).ops(ops)
             })
             .depth_stencil_attachment(&*depth_texture_view, |depth| depth);
 

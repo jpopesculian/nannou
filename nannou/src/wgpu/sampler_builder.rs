@@ -1,10 +1,10 @@
 /// Simplifies the construction of a `Sampler` with a set of reasonable defaults.
 #[derive(Debug)]
-pub struct SamplerBuilder {
-    pub descriptor: wgpu::SamplerDescriptor,
+pub struct SamplerBuilder<'a> {
+    pub descriptor: wgpu::SamplerDescriptor<'a>,
 }
 
-impl SamplerBuilder {
+impl<'a> SamplerBuilder<'a> {
     pub const DEFAULT_ADDRESS_MODE_U: wgpu::AddressMode = wgpu::AddressMode::ClampToEdge;
     pub const DEFAULT_ADDRESS_MODE_V: wgpu::AddressMode = wgpu::AddressMode::ClampToEdge;
     pub const DEFAULT_ADDRESS_MODE_W: wgpu::AddressMode = wgpu::AddressMode::ClampToEdge;
@@ -14,7 +14,8 @@ impl SamplerBuilder {
     pub const DEFAULT_LOD_MIN_CLAMP: f32 = -100.0;
     pub const DEFAULT_LOD_MAX_CLAMP: f32 = 100.0;
     pub const DEFAULT_COMPARE: wgpu::CompareFunction = wgpu::CompareFunction::Always;
-    pub const DEFAULT_DESCRIPTOR: wgpu::SamplerDescriptor = wgpu::SamplerDescriptor {
+    pub const DEFAULT_DESCRIPTOR: wgpu::SamplerDescriptor<'static> = wgpu::SamplerDescriptor {
+        label: None,
         address_mode_u: Self::DEFAULT_ADDRESS_MODE_U,
         address_mode_v: Self::DEFAULT_ADDRESS_MODE_V,
         address_mode_w: Self::DEFAULT_ADDRESS_MODE_W,
@@ -23,11 +24,12 @@ impl SamplerBuilder {
         mipmap_filter: Self::DEFAULT_MIPMAP_FILTER,
         lod_min_clamp: Self::DEFAULT_LOD_MIN_CLAMP,
         lod_max_clamp: Self::DEFAULT_LOD_MAX_CLAMP,
-        compare: Self::DEFAULT_COMPARE,
+        compare: Some(Self::DEFAULT_COMPARE),
+        anisotropy_clamp: None,
     };
 
     /// Begin building a `Sampler`, starting with the `Default` parameters.
-    pub fn new() -> Self {
+    pub fn new() -> SamplerBuilder<'static> {
         Self::default()
     }
 
@@ -105,12 +107,12 @@ impl SamplerBuilder {
     }
 
     /// Consume the builder and produce the inner `SamplerDescriptor`.
-    pub fn into_descriptor(self) -> wgpu::SamplerDescriptor {
+    pub fn into_descriptor(self) -> wgpu::SamplerDescriptor<'a> {
         self.into()
     }
 }
 
-impl Default for SamplerBuilder {
+impl Default for SamplerBuilder<'static> {
     fn default() -> Self {
         SamplerBuilder {
             descriptor: Self::DEFAULT_DESCRIPTOR,
@@ -118,14 +120,14 @@ impl Default for SamplerBuilder {
     }
 }
 
-impl Into<wgpu::SamplerDescriptor> for SamplerBuilder {
-    fn into(self) -> wgpu::SamplerDescriptor {
+impl<'a> Into<wgpu::SamplerDescriptor<'a>> for SamplerBuilder<'a> {
+    fn into(self) -> wgpu::SamplerDescriptor<'a> {
         self.descriptor
     }
 }
 
-impl From<wgpu::SamplerDescriptor> for SamplerBuilder {
-    fn from(descriptor: wgpu::SamplerDescriptor) -> Self {
+impl<'a> From<wgpu::SamplerDescriptor<'a>> for SamplerBuilder<'a> {
+    fn from(descriptor: wgpu::SamplerDescriptor<'a>) -> Self {
         SamplerBuilder { descriptor }
     }
 }

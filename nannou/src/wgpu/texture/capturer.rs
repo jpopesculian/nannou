@@ -51,7 +51,8 @@ pub struct Rgba8ReadMapping<'a> {
     // Hold on to the snapshot to ensure buffer lives as long as mapping. Without this, we get
     // panics (or sigsegv). This seems to be because if snapshot and inner `wgpu::Buffer` drops,
     // the memory is unmapped. TODO: This should be fixed in wgpu.
-    _snapshot: Snapshot,
+    // TODO is this still necessary
+    // _snapshot: Snapshot,
     mapping: wgpu::ImageReadMapping<'a>,
 }
 
@@ -267,8 +268,7 @@ impl Snapshot {
     ) -> Result<Rgba8AsyncMappedImageBuffer<'a>, wgpu::BufferAsyncError> {
         let [width, height] = self.buffer.size();
         let mapping = self.buffer.read().await?;
-        let _snapshot = self;
-        let mapping = Rgba8ReadMapping { _snapshot, mapping };
+        let mapping = Rgba8ReadMapping { mapping };
         let img_buffer = image::ImageBuffer::from_raw(width, height, mapping)
             .expect("image buffer dimensions did not match mapping");
         let img_buffer = Rgba8AsyncMappedImageBuffer(img_buffer);

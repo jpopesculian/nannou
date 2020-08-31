@@ -77,13 +77,13 @@ impl<'a> DepthStencilAttachmentDescriptorBuilder<'a> {
 
     /// Define operations for depth pass
     pub fn depth_ops(mut self, ops: wgpu::Operations<f32>) -> Self {
-        self.descriptor.depth_ops = ops;
+        self.descriptor.depth_ops = Some(ops);
         self
     }
 
     /// Define operations for stencil pass
     pub fn stencil_ops(mut self, ops: wgpu::Operations<u32>) -> Self {
-        self.descriptor.stencil_ops = ops;
+        self.descriptor.stencil_ops = Some(ops);
         self
     }
 }

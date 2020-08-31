@@ -37,7 +37,7 @@ pub struct Texture {
 #[derive(Debug)]
 pub struct TextureView {
     handle: Arc<TextureViewHandle>,
-    descriptor: wgpu::TextureViewDescriptor,
+    descriptor: wgpu::TextureViewDescriptor<'static>,
     texture_extent: wgpu::Extent3d,
     texture_id: TextureId,
 }
@@ -74,7 +74,7 @@ pub struct Builder {
 #[derive(Debug)]
 pub struct ViewBuilder<'a> {
     texture: &'a wgpu::Texture,
-    descriptor: wgpu::TextureViewDescriptor,
+    descriptor: wgpu::TextureViewDescriptor<'static>,
 }
 
 /// A wrapper around a `wgpu::Buffer` containing bytes of a known length.
@@ -98,7 +98,6 @@ impl Texture {
         wgpu::TextureDescriptor {
             label: Some("nannou"),
             size: self.extent(),
-            array_layer_count: self.array_layer_count(),
             mip_level_count: self.mip_level_count(),
             sample_count: self.sample_count(),
             dimension: self.dimension(),
@@ -225,6 +224,7 @@ impl Texture {
         // TODO: Is this correct? Should we check the format?
         let aspect = wgpu::TextureAspect::All;
         wgpu::TextureViewDescriptor {
+            label: None,
             format: self.format(),
             dimension,
             aspect,
@@ -240,7 +240,6 @@ impl Texture {
         wgpu::TextureCopyView {
             texture: &self.handle,
             mip_level: 0,
-            array_layer: 0,
             origin: wgpu::Origin3d::ZERO,
         }
     }
@@ -255,9 +254,11 @@ impl Texture {
         let [width, height] = self.size();
         wgpu::BufferCopyView {
             buffer,
-            offset: 0,
-            bytes_per_row: width * format_size_bytes,
-            rows_per_image: height,
+            layout: wgpu::TextureDataLayout {
+                offset: 0,
+                bytes_per_row: width * format_size_bytes,
+                rows_per_image: height,
+            },
         }
     }
 

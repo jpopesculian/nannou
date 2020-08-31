@@ -71,10 +71,10 @@ pub use wgpu::{
     RenderPassDescriptor, RenderPipeline, RenderPipelineDescriptor, RequestAdapterOptions, Sampler,
     SamplerDescriptor, ShaderLocation, ShaderModule, ShaderStage, StencilOperation,
     StencilStateFaceDescriptor, Surface, SwapChain, SwapChainDescriptor, Texture as TextureHandle,
-    TextureAspect, TextureComponentType, TextureCopyView, TextureDescriptor, TextureDimension,
-    TextureFormat, TextureUsage, TextureView as TextureViewHandle, TextureViewDescriptor,
-    TextureViewDimension, VertexAttributeDescriptor, VertexBufferDescriptor, VertexFormat,
-    VertexStateDescriptor, BIND_BUFFER_ALIGNMENT,
+    TextureAspect, TextureComponentType, TextureCopyView, TextureDataLayout, TextureDescriptor,
+    TextureDimension, TextureFormat, TextureUsage, TextureView as TextureViewHandle,
+    TextureViewDescriptor, TextureViewDimension, VertexAttributeDescriptor, VertexBufferDescriptor,
+    VertexFormat, VertexStateDescriptor, BIND_BUFFER_ALIGNMENT,
 };
 
 pub fn shader_from_spirv_bytes(device: &wgpu::Device, bytes: &[u8]) -> wgpu::ShaderModule {
@@ -128,23 +128,13 @@ pub fn create_pipeline_layout(
     device: &wgpu::Device,
     bind_group_layouts: &[&wgpu::BindGroupLayout],
 ) -> wgpu::PipelineLayout {
-    let descriptor = wgpu::PipelineLayoutDescriptor { bind_group_layouts };
+    // TODO push_constant_ranges as argument?
+    let descriptor = wgpu::PipelineLayoutDescriptor {
+        label: None,
+        bind_group_layouts,
+        push_constant_ranges: &[],
+    };
     device.create_pipeline_layout(&descriptor)
-}
-
-/// TODO: Remove this once `derive(Clone)` is added to wgpu SamplerDescriptor.
-pub fn sampler_descriptor_clone(sampler: &wgpu::SamplerDescriptor) -> wgpu::SamplerDescriptor {
-    wgpu::SamplerDescriptor {
-        address_mode_u: sampler.address_mode_u,
-        address_mode_v: sampler.address_mode_v,
-        address_mode_w: sampler.address_mode_w,
-        mag_filter: sampler.mag_filter,
-        min_filter: sampler.min_filter,
-        mipmap_filter: sampler.mipmap_filter,
-        lod_min_clamp: sampler.lod_min_clamp,
-        lod_max_clamp: sampler.lod_max_clamp,
-        compare: sampler.compare,
-    }
 }
 
 /// The functions within this module use unsafe in order to retrieve their input as a slice of

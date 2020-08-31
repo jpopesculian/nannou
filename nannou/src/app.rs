@@ -1066,10 +1066,11 @@ fn run_loop<M, E>(
                 };
 
                 if let Some(model) = model.as_ref() {
-                    let swap_chain_output = swap_chain
-                        .get_next_texture()
+                    // TODO check if swapchain is suboptimal
+                    let swap_chain_frame = swap_chain
+                        .get_current_frame()
                         .expect("failed to acquire next swapchain texture");
-                    let swap_chain_texture = &swap_chain_output.view;
+                    let swap_chain_texture = &swap_chain_frame.output.view;
 
                     // Borrow the window now that we don't need it mutably until setting the render
                     // data back.
