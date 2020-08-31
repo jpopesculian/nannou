@@ -632,7 +632,7 @@ impl BufferBytes {
     ///
     /// Note: The given callback will not be called until the memory is mapped and the device is
     /// polled. You should not rely on the callback being called immediately.
-    pub async fn read(&self) -> Result<wgpu::BufferReadMapping, wgpu::BufferAsyncErr> {
+    pub async fn read(&self) -> Result<wgpu::BufferReadMapping, wgpu::BufferAsyncError> {
         self.buffer.map_read(0, self.len_bytes).await
     }
 

@@ -56,10 +56,10 @@ pub use self::texture::{
 };
 #[doc(inline)]
 pub use wgpu::{
-    read_spirv, vertex_attr_array, vertex_format_size, Adapter, AdapterInfo, AddressMode, Backend,
-    BackendBit, BindGroup, BindGroupDescriptor, BindGroupLayout, BindGroupLayoutDescriptor,
-    BindGroupLayoutEntry, Binding, BindingResource, BindingType, BlendDescriptor, BlendFactor,
-    BlendOperation, Buffer, BufferAddress, BufferAsyncErr, BufferCopyView, BufferDescriptor,
+    vertex_attr_array, Adapter, AdapterInfo, AddressMode, Backend, BackendBit, BindGroup,
+    BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutDescriptor,
+    BindGroupLayoutEntry, BindingResource, BindingType, BlendDescriptor, BlendFactor,
+    BlendOperation, Buffer, BufferAddress, BufferAsyncError, BufferCopyView, BufferDescriptor,
     BufferReadMapping, BufferUsage, BufferWriteMapping, Color, ColorStateDescriptor, ColorWrite,
     CommandBuffer, CommandBufferDescriptor, CommandEncoder, CommandEncoderDescriptor,
     CompareFunction, ComputePass, ComputePipeline, ComputePipelineDescriptor, CreateBufferMapped,
@@ -79,9 +79,9 @@ pub use wgpu::{
 };
 
 pub fn shader_from_spirv_bytes(device: &wgpu::Device, bytes: &[u8]) -> wgpu::ShaderModule {
-    let cursor = std::io::Cursor::new(bytes);
-    let vs_spirv = read_spirv(cursor).expect("failed to read hard-coded SPIRV");
-    device.create_shader_module(&vs_spirv)
+    let (_, words, _) = unsafe { bytes.align_to::<u32>() };
+    let shader_src = wgpu::ShaderModuleSource::SpirV(std::borrow::Cow::Borrowed(words));
+    device.create_shader_module(shader_src)
 }
 
 /// The default power preference used for requesting the WGPU adapter.

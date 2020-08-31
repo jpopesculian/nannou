@@ -213,18 +213,18 @@ impl<'a> Builder<'a> {
 
     /// Build the bind group with the specified resources.
     pub fn build(self, device: &wgpu::Device, layout: &wgpu::BindGroupLayout) -> wgpu::BindGroup {
-        let mut bindings = Vec::with_capacity(self.resources.len());
+        let mut entries = Vec::with_capacity(self.resources.len());
         for (i, resource) in self.resources.into_iter().enumerate() {
-            let binding = wgpu::Binding {
+            let entry = wgpu::BindGroupEntry {
                 binding: i as u32,
                 resource,
             };
-            bindings.push(binding);
+            entries.push(entry);
         }
         let descriptor = wgpu::BindGroupDescriptor {
             label: Some("nannou"),
             layout,
-            bindings: &bindings,
+            entries: &entries,
         };
         device.create_bind_group(&descriptor)
     }
