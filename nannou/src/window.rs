@@ -805,7 +805,7 @@ impl<'app> Builder<'app> {
             .ok_or(BuildError::NoAvailableAdapter)?;
 
         // Instantiate the logical device.
-        let device_desc = device_desc.unwrap_or_else(wgpu::default_device_descriptor);
+        let device_desc = device_desc.unwrap_or_default();
         let device_queue_pair = adapter.get_or_request_device(device_desc);
 
         // Build the swapchain.

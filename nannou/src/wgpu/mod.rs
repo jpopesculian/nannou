@@ -56,32 +56,29 @@ pub use self::texture::{
 };
 #[doc(inline)]
 pub use wgpu::{
-    vertex_attr_array, Adapter, AdapterInfo, AddressMode, Backend, BackendBit, BindGroup,
-    BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutDescriptor,
+    util::make_spirv, vertex_attr_array, Adapter, AdapterInfo, AddressMode, Backend, BackendBit,
+    BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutDescriptor,
     BindGroupLayoutEntry, BindingResource, BindingType, BlendDescriptor, BlendFactor,
     BlendOperation, Buffer, BufferAddress, BufferAsyncError, BufferCopyView, BufferDescriptor,
     BufferUsage, BufferView, Color, ColorStateDescriptor, ColorWrite, CommandBuffer,
     CommandBufferDescriptor, CommandEncoder, CommandEncoderDescriptor, CompareFunction,
     ComputePass, ComputePipeline, ComputePipelineDescriptor, CullMode, DepthStencilStateDescriptor,
-    Device, DeviceDescriptor, DeviceType, DynamicOffset, Extensions, Extent3d, FilterMode,
-    FrontFace, IndexFormat, InputStepMode, Limits, LoadOp, Maintain, MapMode, Origin3d,
+    Device, DeviceDescriptor, DeviceType, DynamicOffset, Extent3d, FilterMode, FrontFace,
+    IndexFormat, InputStepMode, Limits, LoadOp, Maintain, MapMode, Operations, Origin3d,
     PipelineLayout, PipelineLayoutDescriptor, PowerPreference, PresentMode, PrimitiveTopology,
     ProgrammableStageDescriptor, Queue, RasterizationStateDescriptor, RenderPass,
     RenderPassColorAttachmentDescriptor, RenderPassDepthStencilAttachmentDescriptor,
     RenderPassDescriptor, RenderPipeline, RenderPipelineDescriptor, RequestAdapterOptions, Sampler,
     SamplerDescriptor, ShaderLocation, ShaderModule, ShaderStage, StencilOperation,
-    StencilStateFaceDescriptor, StoreOp, Surface, SwapChain, SwapChainDescriptor, SwapChainOutput,
-    Texture as TextureHandle, TextureAspect, TextureComponentType, TextureCopyView,
-    TextureDescriptor, TextureDimension, TextureFormat, TextureUsage,
-    TextureView as TextureViewHandle, TextureViewDescriptor, TextureViewDimension, TimeOut,
-    VertexAttributeDescriptor, VertexBufferDescriptor, VertexFormat, VertexStateDescriptor,
-    BIND_BUFFER_ALIGNMENT, MAX_BIND_GROUPS,
+    StencilStateFaceDescriptor, Surface, SwapChain, SwapChainDescriptor, Texture as TextureHandle,
+    TextureAspect, TextureComponentType, TextureCopyView, TextureDescriptor, TextureDimension,
+    TextureFormat, TextureUsage, TextureView as TextureViewHandle, TextureViewDescriptor,
+    TextureViewDimension, VertexAttributeDescriptor, VertexBufferDescriptor, VertexFormat,
+    VertexStateDescriptor, BIND_BUFFER_ALIGNMENT,
 };
 
 pub fn shader_from_spirv_bytes(device: &wgpu::Device, bytes: &[u8]) -> wgpu::ShaderModule {
-    let (_, words, _) = unsafe { bytes.align_to::<u32>() };
-    let shader_src = wgpu::ShaderModuleSource::SpirV(std::borrow::Cow::Borrowed(words));
-    device.create_shader_module(shader_src)
+    device.create_shader_module(make_spirv(bytes))
 }
 
 /// The default power preference used for requesting the WGPU adapter.
@@ -89,11 +86,6 @@ pub const DEFAULT_POWER_PREFERENCE: PowerPreference = PowerPreference::HighPerfo
 
 /// Nannou's default WGPU backend preferences.
 pub const DEFAULT_BACKENDS: BackendBit = BackendBit::PRIMARY;
-
-/// The default set of `Extensions` used within the `default_device_descriptor()` function.
-pub const DEFAULT_EXTENSIONS: Extensions = Extensions {
-    anisotropic_filtering: true,
-};
 
 /// Adds a simple render pass command to the given encoder that simply clears the given texture
 /// with the given colour.
@@ -107,13 +99,6 @@ pub fn clear_texture(
     RenderPassBuilder::new()
         .color_attachment(texture, |builder| builder.clear_color(clear_color))
         .begin(encoder);
-}
-
-/// The default device descriptor used to instantiate a logical device when creating windows.
-pub fn default_device_descriptor() -> DeviceDescriptor {
-    let extensions = DEFAULT_EXTENSIONS;
-    let limits = Limits::default();
-    DeviceDescriptor { extensions, limits }
 }
 
 /// Adds a simple render pass command to the given encoder that resolves the given multisampled
